@@ -157,19 +157,29 @@ router.delete("/:id", (req, res) => {
 
 router.put("/:id", (req, res) => {
   const changes = req.body;
-  Hubs.update(req.params.id, changes)
-    .then(hub => {
-      if (hub) {
-        res.status(200).json(hub);
+  db.findById(req.params.id)
+    .then(post => {
+      if (post.length > 0) {
+        if ("title" in changes && "contents" in changes) {
+          db.update(req.params.id, changes).then(post => {
+            res.status(200).json(changes);
+          });
+        } else {
+          res.status(400).json({
+            errorMessage: "Please provide title and contents for the post."
+          });
+        }
       } else {
-        res.status(404).json({ message: "The hub could not be found" });
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist." });
       }
     })
     .catch(error => {
       // log error to database
       console.log(error);
       res.status(500).json({
-        message: "Error updating the hub"
+        error: "The post information could not be modified."
       });
     });
 });
