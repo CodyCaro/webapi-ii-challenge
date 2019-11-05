@@ -41,6 +41,29 @@ router.get("/:id", (req, res) => {
     });
 });
 
+router.get("/:id/comments", (req, res) => {
+  db.findById(req.params.id)
+    .then(post => {
+      if (post.length > 0) {
+        db.findPostComments(req.params.id).then(comments => {
+          console.log(req.body);
+          res.status(200).json(comments);
+        });
+      } else {
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist." });
+      }
+    })
+    .catch(error => {
+      // log error to database
+      console.log(error);
+      res.status(500).json({
+        error: "The comments information could not be retrieved."
+      });
+    });
+});
+
 router.post("/", (req, res) => {
   const postData = req.body;
 
@@ -68,7 +91,10 @@ router.post("/:id/comments", (req, res) => {
       if (post.length > 0) {
         console.log(req.body);
         if ("text" in req.body) {
-          res.status(201).json(req.body);
+          req.body.post_id = req.params.id;
+          db.insertComment(req.body).then(comment => {
+            res.status(201).json(req.body);
+          });
         } else {
           res
             .status(400)
