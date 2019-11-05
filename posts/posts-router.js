@@ -8,33 +8,35 @@ router.post("/:owner/:repo/git/refs", (req, res) => {
 
 router.get("/", (req, res) => {
   console.log(req.query);
-  Hubs.find(req.query)
-    .then(hubs => {
-      res.status(200).json(hubs);
+  db.find(req.query)
+    .then(posts => {
+      res.status(200).json(posts);
     })
     .catch(error => {
       // log error to database
       console.log(error);
       res.status(500).json({
-        message: "Error retrieving the hubs"
+        error: "The posts information could not be retrieved."
       });
     });
 });
 
 router.get("/:id", (req, res) => {
-  Hubs.findById(req.params.id)
-    .then(hub => {
-      if (hub) {
-        res.status(200).json(hub);
+  db.findById(req.params.id)
+    .then(post => {
+      if (post.length > 0) {
+        res.status(200).json(post);
       } else {
-        res.status(404).json({ message: "Hub not found" });
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist." });
       }
     })
     .catch(error => {
       // log error to database
       console.log(error);
       res.status(500).json({
-        message: "Error retrieving the hub"
+        error: "The post information could not be retrieved."
       });
     });
 });
@@ -58,6 +60,33 @@ router.post("/", (req, res) => {
       errorMessage: "Please provide title and contents for the post."
     });
   }
+});
+
+router.post("/:id/comments", (req, res) => {
+  db.findById(req.params.id)
+    .then(post => {
+      if (post.length > 0) {
+        console.log(req.body);
+        if ("text" in req.body) {
+          res.status(201).json(req.body);
+        } else {
+          res
+            .status(400)
+            .json({ errorMessage: "Please provide text for the comment." });
+        }
+      } else {
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist." });
+      }
+    })
+    .catch(error => {
+      // log error to database
+      console.log(error);
+      res.status(500).json({
+        error: "There was an error while saving the comment to the database"
+      });
+    });
 });
 
 //--------POST EXAMPLE-------------
